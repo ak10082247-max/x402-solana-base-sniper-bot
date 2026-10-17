@@ -1,0 +1,35 @@
+{
+  "name": "x402-solana-base-sniper-bot",
+  "version": "1.0.0",
+  "description": "Autonomous Solana (Pump.fun/Raydium/Jupiter), Base (Aerodrome/Uniswap V3) & Polymarket AI Sniper Bot with pre-wired x402 v2 Honeypot, Smart-Money Netflow & Prompt-Injection Protection.",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "build": "tsc"
+  },
+  "keywords": [
+    "solana-sniper-bot",
+    "pump-fun-bot",
+    "base-trading-bot",
+    "polymarket-bot",
+    "x402",
+    "mcp-agent",
+    "solana-agent-kit",
+    "coinbase-agentkit"
+  ],
+  "dependencies": {
+    "@kurox_real/canaryguard-client": "^1.0.1",
+    "@kurox_real/rugshield-client": "^1.0.0",
+    "@kurox_real/solana-agent-kit-guard": "^1.0.0",
+    "@kurox_real/stealthguard-client": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  },
+  "license": "MIT"
+}
