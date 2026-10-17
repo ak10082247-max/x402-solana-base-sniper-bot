@@ -1,6 +1,7 @@
 {
   "name": "@kurox_real/x402-sniper-bot",
-  "version": "1.0.0",
+  "version": "1.0.2",
+  "mcpName": "io.github.ak10082247-max/x402-sniper-bot",
   "description": "Autonomous Solana (Pump.fun/Raydium/Jupiter), Base (Aerodrome/Uniswap V3) & Polymarket AI Sniper Bot with pre-wired x402 v2 Honeypot, Smart-Money Netflow & Prompt-Injection Protection.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
