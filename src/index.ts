@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 /**
- * x402-solana-base-sniper-bot
+ * @kurox_real/x402-sniper-bot
  * ---------------------------
  * Production-ready autonomous sniper & whale-following trading agent for:
  *   1. Solana Mainnet (Pump.fun graduations, Raydium CLMM, Jupiter v6)
@@ -82,9 +83,9 @@ export async function verifyTokenBeforeSnipe(
   };
 }
 
-async function runSniperLoop() {
+export async function runSniperLoop() {
   console.log("==================================================================");
-  console.log("🚀 x402 Solana (Pump.fun/Jupiter) + Base (Aerodrome) Sniper Bot");
+  console.log("🚀 @kurox_real/x402-sniper-bot — Solana + Base + Polymarket Sniper");
   console.log("🛡️ Pre-Trade Security & Whale Netflow Gate: ACTIVE ($0.010 USDC)");
   console.log("==================================================================");
 
@@ -96,7 +97,10 @@ async function runSniperLoop() {
   for (const alert of (feed.alerts || []).slice(0, 3)) {
     console.log(`\n-> Auditing [${alert.chain.toUpperCase()}] ${alert.symbol} (${alert.token_address})`);
     console.log(`   50% Free Teaser: ${alert.teaser_verdict}`);
-    console.log(`   1-Click Browser/Blink Unlock: ${alert.unlock_url}`);
+    console.log(`   1-Click Terminal Unlock: ${alert.unlock_url}`);
+    if (alert.solana_blink_url) {
+      console.log(`   1-Click Solana Blink:    ${alert.solana_blink_url}`);
+    }
     await verifyTokenBeforeSnipe(alert.token_address, alert.chain);
   }
 }
