@@ -1,0 +1,30 @@
+startCommand:
+  type: stdio
+
+configSchema:
+  type: object
+  properties:
+    rugshieldUrl:
+      type: string
+      title: "RugShield Service URL"
+      description: "Custom RugShield 402 endpoint URL"
+      default: "https://rugshield-402.onrender.com"
+    canaryguardUrl:
+      type: string
+      title: "CanaryGuard Service URL"
+      description: "Custom CanaryGuard 402 endpoint URL"
+      default: "https://canaryguard-402.onrender.com"
+
+commandFunction: |-
+  (config) => ({
+    command: "node",
+    args: ["./dist/index.js"],
+    env: {
+      RUGSHIELD_URL: config.rugshieldUrl || "https://rugshield-402.onrender.com",
+      CANARYGUARD_URL: config.canaryguardUrl || "https://canaryguard-402.onrender.com"
+    }
+  })
+
+exampleConfig:
+  rugshieldUrl: "https://rugshield-402.onrender.com"
+  canaryguardUrl: "https://canaryguard-402.onrender.com"
