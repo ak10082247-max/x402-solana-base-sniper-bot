@@ -32,23 +32,23 @@ jobs:
 
       - name: Publish x402-sniper-bot (stdio package)
         run: |
-          ./mcp-publisher publish server.json
+          ./mcp-publisher publish server.json || true
 
       - name: Publish canaryguard-402 (streamable-http remote)
         run: |
-          ./mcp-publisher publish registry/canaryguard.json
+          ./mcp-publisher publish registry/canaryguard.json || true
 
       - name: Publish rugshield-402 (streamable-http remote)
         run: |
-          ./mcp-publisher publish registry/rugshield.json
+          ./mcp-publisher publish registry/rugshield.json || true
 
       - name: Publish stealthguard-402 (streamable-http remote)
         run: |
-          ./mcp-publisher publish registry/stealthguard.json
+          ./mcp-publisher publish registry/stealthguard.json || true
 
       - name: Publish x402-agent-tollbooth (streamable-http remote)
         run: |
-          ./mcp-publisher publish registry/tollbooth.json
+          ./mcp-publisher publish registry/tollbooth.json || true
 
       - name: Verify Published Servers
         run: |
