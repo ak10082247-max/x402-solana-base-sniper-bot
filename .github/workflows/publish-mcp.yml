@@ -1,0 +1,56 @@
+name: Publish to Official MCP Registry
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'server.json'
+      - 'registry/**'
+      - '.github/workflows/publish-mcp.yml'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          chmod +x mcp-publisher
+
+      - name: Authenticate to MCP Registry via GitHub OIDC
+        run: |
+          ./mcp-publisher login github-oidc
+
+      - name: Publish x402-sniper-bot (stdio package)
+        run: |
+          ./mcp-publisher publish server.json
+
+      - name: Publish canaryguard-402 (streamable-http remote)
+        run: |
+          ./mcp-publisher publish registry/canaryguard.json
+
+      - name: Publish rugshield-402 (streamable-http remote)
+        run: |
+          ./mcp-publisher publish registry/rugshield.json
+
+      - name: Publish stealthguard-402 (streamable-http remote)
+        run: |
+          ./mcp-publisher publish registry/stealthguard.json
+
+      - name: Publish x402-agent-tollbooth (streamable-http remote)
+        run: |
+          ./mcp-publisher publish registry/tollbooth.json
+
+      - name: Verify Published Servers
+        run: |
+          echo "Verifying published servers on registry.modelcontextprotocol.io..."
+          curl -s "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.ak10082247-max" | jq .
