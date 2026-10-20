@@ -33,7 +33,55 @@ All endpoints accept **both** **Solana Mainnet USDC** (`solana:5eykt4UsFv8P8NJdT
 
 ---
 
-## 🚀 Quick Start
+## 🚀 1-Click Desktop MCP Installation (Claude Desktop, Cursor, Windsurf, Cline)
+
+Install this oracle directly into your AI coding agent with one copy-paste configuration:
+
+### 1. Claude Desktop (`claude_desktop_config.json`)
+* **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+* **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "kurox-oracle": {
+      "command": "npx",
+      "args": ["-y", "@kurox_real/x402-sniper-bot"]
+    },
+    "canaryguard": {
+      "url": "https://canaryguard-402.onrender.com/mcp"
+    }
+  }
+}
+```
+
+### 2. Cursor (`.cursor/mcp.json` or Cursor Settings -> Features -> MCP)
+```json
+{
+  "mcpServers": {
+    "kurox-oracle": {
+      "command": "npx",
+      "args": ["-y", "@kurox_real/x402-sniper-bot"]
+    }
+  }
+}
+```
+
+### 3. Windsurf & Cline (VS Code)
+```json
+{
+  "mcpServers": {
+    "kurox-oracle": {
+      "command": "npx",
+      "args": ["-y", "@kurox_real/x402-sniper-bot"]
+    }
+  }
+}
+```
+
+---
+
+## 🚀 Quick Start (Local NPM / Git)
 
 ```bash
 git clone https://github.com/ak10082247-max/x402-solana-base-sniper-bot.git
