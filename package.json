@@ -1,8 +1,8 @@
 {
   "name": "@kurox_real/x402-sniper-bot",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "mcpName": "io.github.ak10082247-max/x402-sniper-bot",
-  "description": "Autonomous Solana (Pump.fun/Raydium/Jupiter), Base (Aerodrome/Uniswap V3) & Polymarket AI Sniper Bot with pre-wired x402 v2 Honeypot, Smart-Money Netflow & Prompt-Injection Protection.",
+  "description": "Read-only pre-trade honeypot simulation, mempool front-running risk detection, and DEX alpha oracle for Solana, Base & Polymarket. Zero private key custody.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -10,7 +10,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"
