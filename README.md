@@ -22,6 +22,31 @@ npx -y @kurox_real/x402-sniper-bot scan 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA029
 
 ---
 
+## 🎯 24/7 Autonomous DEX Sniper Daemon (Background Runner)
+
+Automatically monitors newly graduated Pump.fun and Raydium pools on Solana Mainnet, intercepting every target token with the RugShield 402 pre-trade simulation before executing swaps:
+
+```bash
+# Run continuous 24/7 autonomous loop
+npm run sniper:daemon
+
+# Run single tick verification (for CI / cron pipelines)
+npm run sniper:once
+```
+
+---
+
+## 🤖 Telegram Community Token Sentry Bot
+
+Deploy a zero-cost Telegram bot into your crypto trading channels or degen groups. Automatically scans contract addresses (CAs) whenever dropped by users and sends an interactive security card with a 1-click in-app Telegram Mini App web terminal:
+
+```bash
+export TELEGRAM_BOT_TOKEN="your_botfather_token_here"
+npm run telegram:bot
+```
+
+---
+
 ## 🔥 Live 1-Click Web Terminal & Solana Blinks
 
 - **RugShield 402 Terminal**: [https://rugshield-402.onrender.com](https://rugshield-402.onrender.com)

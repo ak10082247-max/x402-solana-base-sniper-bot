@@ -20,7 +20,10 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "sniper:daemon": "tsx scripts/solana_pumpfun_sniper_daemon.ts",
+    "sniper:once": "tsx scripts/solana_pumpfun_sniper_daemon.ts --once",
+    "telegram:bot": "python scripts/telegram_token_sentry_bot.py"
   },
   "repository": {
     "type": "git",
