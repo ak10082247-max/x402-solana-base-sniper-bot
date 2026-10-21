@@ -12,7 +12,7 @@
  * ZERO private keys, ZERO seed phrases, and holds ZERO custody of user funds.
  */
 import * as readline from "readline";
-export const SERVICE_VERSION = "1.0.8";
+export const SERVICE_VERSION = "1.0.9";
 export const X402_ENDPOINTS = {
     rugshield: process.env.RUGSHIELD_URL || "https://rugshield-402.onrender.com",
     canaryguard: process.env.CANARYGUARD_URL || "https://canaryguard-402.onrender.com",

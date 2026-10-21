@@ -1,6 +1,6 @@
 {
   "name": "@kurox_real/x402-sniper-bot",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "mcpName": "io.github.ak10082247-max/x402-sniper-bot",
   "description": "Read-only pre-trade honeypot simulation, mempool front-running risk detection, and DEX alpha oracle for Solana, Base & Polymarket. Zero private key custody.",
   "main": "dist/index.js",
@@ -10,6 +10,7 @@
   },
   "files": [
     "dist",
+    "scripts",
     "README.md",
     "LICENSE"
   ],
