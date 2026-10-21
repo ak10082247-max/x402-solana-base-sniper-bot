@@ -3,7 +3,7 @@
   "name": "io.github.ak10082247-max/x402-sniper-bot",
   "description": "Read-only pre-trade honeypot simulation and DEX alpha oracle for Solana and Base.",
   "title": "x402 Security & Alpha Oracle",
-  "version": "1.0.5",
+  "version": "1.0.9",
   "websiteUrl": "https://rugshield-402.onrender.com",
   "repository": {
     "url": "https://github.com/ak10082247-max/x402-solana-base-sniper-bot",
@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "identifier": "@kurox_real/x402-sniper-bot",
-      "version": "1.0.5",
+      "version": "1.0.9",
       "transport": {
         "type": "stdio"
       }
