@@ -11,7 +11,7 @@
  * This server operates strictly as a read-only verification oracle. It requires
  * ZERO private keys, ZERO seed phrases, and holds ZERO custody of user funds.
  */
-export declare const SERVICE_VERSION = "1.0.5";
+export declare const SERVICE_VERSION = "1.0.8";
 export declare const X402_ENDPOINTS: {
     rugshield: string;
     canaryguard: string;
@@ -112,3 +112,4 @@ export interface PreTradeVerdict {
 }
 export declare function verifyTokenBeforeSnipe(tokenAddress: string, chain?: "solana" | "base", paymentSignature?: string): Promise<PreTradeVerdict>;
 export declare function runSniperLoop(): Promise<void>;
+export declare function executeTerminalScan(tokenAddress: string): Promise<void>;

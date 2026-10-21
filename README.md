@@ -8,6 +8,20 @@ Pre-configured with the **Kurox 402 Security & Smart-Money Fleet** so autonomous
 
 ---
 
+## ⚡ 1-Command Pre-Trade Honeypot Scan (Zero-Install CLI)
+
+Audit any **Solana SPL Mint** or **Base ERC-20 contract** directly in your terminal in under 2 seconds — with zero configuration and zero API keys:
+
+```bash
+# Scan any Solana SPL Token Mint (e.g. BONK)
+npx -y @kurox_real/x402-sniper-bot scan DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
+
+# Scan any Base ERC-20 Contract (e.g. USDC)
+npx -y @kurox_real/x402-sniper-bot scan 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+```
+
+---
+
 ## 🔥 Live 1-Click Web Terminal & Solana Blinks
 
 - **RugShield 402 Terminal**: [https://rugshield-402.onrender.com](https://rugshield-402.onrender.com)

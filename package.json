@@ -1,12 +1,12 @@
 {
   "name": "@kurox_real/x402-sniper-bot",
-  "version": "1.0.5",
+  "version": "1.0.8",
   "mcpName": "io.github.ak10082247-max/x402-sniper-bot",
   "description": "Read-only pre-trade honeypot simulation, mempool front-running risk detection, and DEX alpha oracle for Solana, Base & Polymarket. Zero private key custody.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "x402-sniper-bot": "./dist/index.js"
+    "x402-sniper-bot": "dist/index.js"
   },
   "files": [
     "dist",
@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ak10082247-max/x402-solana-base-sniper-bot.git"
+    "url": "git+https://github.com/ak10082247-max/x402-solana-base-sniper-bot.git"
   },
   "homepage": "https://rugshield-402.onrender.com",
   "keywords": [
