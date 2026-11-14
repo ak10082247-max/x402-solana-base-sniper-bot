@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-export declare const SERVICE_VERSION = "1.1.0";
+export declare const SERVICE_VERSION = "1.1.1";
 export declare const X402_UPGRADE_HINT = "Evaluated via free preview. Set SOLANA_PRIVATE_KEY (Solana USDC, 0 SOL gas) or X402_PRIVATE_KEY (Base USDC, 0 ETH gas) for live swap simulation & smart-money orderflow ($0.010 USDC/call).";
 export declare const X402_ENDPOINTS: {
     rugshield: string;

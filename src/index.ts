@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @kurox_real/x402-sniper-bot (v1.1.0)
+ * @kurox_real/x402-sniper-bot (v1.1.1)
  * -------------------------------------
  * Model Context Protocol (MCP) Pre-Trade Security & Alpha Oracle for:
  *   1. Solana Mainnet (Pump.fun graduations, Raydium, Jupiter v6)
@@ -12,6 +12,7 @@
  *   - Base Mainnet USDC (CDP / PayAI gasless EIP-3009): set X402_PRIVATE_KEY
  *   - Omit keys to evaluate free /preview endpoints.
  */
+import { realpathSync } from "fs";
 import * as readline from "readline";
 import {
   createGuardPayingFetch,
@@ -21,7 +22,7 @@ import {
   resolveSolanaRpcUrl,
 } from "@kurox_real/solana-agent-kit-guard";
 
-export const SERVICE_VERSION = "1.1.0";
+export const SERVICE_VERSION = "1.1.1";
 
 export const X402_UPGRADE_HINT =
   "Evaluated via free preview. Set SOLANA_PRIVATE_KEY (Solana USDC, 0 SOL gas) or X402_PRIVATE_KEY (Base USDC, 0 ETH gas) for live swap simulation & smart-money orderflow ($0.010 USDC/call).";
@@ -671,13 +672,19 @@ Pre-Trade Security & Alpha Oracle for Solana & Base Mainnet
   }
 }
 
-const isMainEntry =
-  typeof process !== "undefined" &&
-  Array.isArray(process.argv) &&
-  process.argv[1] &&
-  /index\.(js|ts)$/.test(process.argv[1].replace(/\\/g, "/"));
+function isMainInvocation(): boolean {
+  if (typeof process === "undefined" || !Array.isArray(process.argv) || !process.argv[1]) {
+    return false;
+  }
+  try {
+    const resolved = realpathSync(process.argv[1]).replace(/\\/g, "/");
+    return /index\.(js|ts)$/.test(resolved);
+  } catch {
+    return /index\.(js|ts)$/.test(process.argv[1].replace(/\\/g, "/"));
+  }
+}
 
-if (isMainEntry) {
+if (isMainInvocation()) {
   main().catch((err) => {
     console.error("Fatal startup error:", err);
     process.exit(1);

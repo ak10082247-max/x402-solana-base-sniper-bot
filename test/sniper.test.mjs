@@ -56,7 +56,7 @@ test("verifyTokenBeforeSnipe uses free preview and returns upgradeHint when no p
         );
       },
     });
-    assert.equal(SERVICE_VERSION, "1.1.0");
+    assert.equal(SERVICE_VERSION, "1.1.1");
     assert.equal(seenUrls.length, 1);
     assert.match(seenUrls[0], /\/v1\/scan\/preview$/);
     assert.equal(res.paymentMode, "free_preview");
