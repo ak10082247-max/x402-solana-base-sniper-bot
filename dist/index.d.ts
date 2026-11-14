@@ -15,8 +15,6 @@ export declare const SERVICE_VERSION = "1.0.9";
 export declare const X402_ENDPOINTS: {
     rugshield: string;
     canaryguard: string;
-    stealthguard: string;
-    tollbooth: string;
 };
 export declare const MCP_TOOLS: ({
     name: string;
@@ -104,12 +102,12 @@ export interface PreTradeVerdict {
     safeToExecute: boolean;
     chain: "solana" | "base";
     tokenAddress: string;
-    buyTaxBps: number;
-    sellTaxBps: number;
-    smartMoneyNetflow24hUsd: number;
-    sybilClustersDetected: number;
+    buyTaxBps: number | null;
+    sellTaxBps: number | null;
+    smartMoneyNetflow24hUsd: number | null;
+    sybilClustersDetected: number | null;
     verdict: string;
 }
-export declare function verifyTokenBeforeSnipe(tokenAddress: string, chain?: "solana" | "base", paymentSignature?: string): Promise<PreTradeVerdict>;
+export declare function verifyTokenBeforeSnipe(tokenAddress: string, chain?: "solana" | "base", paymentSignature?: string | undefined): Promise<PreTradeVerdict>;
 export declare function runSniperLoop(): Promise<void>;
 export declare function executeTerminalScan(tokenAddress: string): Promise<void>;

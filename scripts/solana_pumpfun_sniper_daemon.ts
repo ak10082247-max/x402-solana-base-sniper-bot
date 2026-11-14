@@ -24,11 +24,12 @@ interface TokenAlert {
 }
 
 interface PreTradeScanResult {
-  is_honeypot: boolean;
-  buy_tax_bps: number;
-  sell_tax_bps: number;
-  liquidity_usd: number;
-  sybil_clusters: number;
+  is_honeypot: boolean | null;
+  buy_tax_bps: number | null;
+  sell_tax_bps: number | null;
+  liquidity_usd: number | null;
+  sybil_clusters: number | null;
+  simulation_status: string | null;
   recommendation: string;
 }
 
@@ -79,12 +80,13 @@ async function auditTokenWithRugShield(mint: string, chain: string = "solana"): 
 
   const data: any = await res.json();
   return {
-    is_honeypot: Boolean(data.is_honeypot),
-    buy_tax_bps: data.buy_tax_bps ?? 0,
-    sell_tax_bps: data.sell_tax_bps ?? 0,
-    liquidity_usd: data.liquidity_usd ?? 0,
-    sybil_clusters: data.sybil_clusters ?? 0,
-    recommendation: data.recommendation || "SAFE_TO_SWAP",
+    is_honeypot: typeof data.is_honeypot === "boolean" ? data.is_honeypot : null,
+    buy_tax_bps: typeof data.buy_tax_bps === "number" ? data.buy_tax_bps : null,
+    sell_tax_bps: typeof data.sell_tax_bps === "number" ? data.sell_tax_bps : null,
+    liquidity_usd: typeof data.liquidity_usd === "number" ? data.liquidity_usd : null,
+    sybil_clusters: typeof data.sybil_clusters === "number" ? data.sybil_clusters : null,
+    simulation_status: typeof data.simulation_status === "string" ? data.simulation_status : null,
+    recommendation: typeof data.recommendation === "string" ? data.recommendation : "UNVERIFIED_PREVIEW",
   };
 }
 
@@ -110,10 +112,12 @@ async function runSniperLoop() {
         try {
           const chain = alert.token_address.startsWith("0x") ? "base" : "solana";
           const audit = await auditTokenWithRugShield(alert.token_address, chain);
-          if (audit.is_honeypot || audit.sell_tax_bps > 1000) {
-            console.log(`❌ [ABORTED] RugShield detected honeypot or malicious tax (${audit.sell_tax_bps / 100}%). Swap skipped!`);
+          if (audit.is_honeypot === true || (audit.sell_tax_bps !== null && audit.sell_tax_bps > 1000)) {
+            console.log(`❌ [ABORTED] RugShield detected honeypot or malicious tax (${audit.sell_tax_bps !== null ? `${audit.sell_tax_bps / 100}%` : "unknown"}). Swap skipped!`);
+          } else if (audit.is_honeypot !== false || audit.sell_tax_bps === null || audit.liquidity_usd === null) {
+            console.log(`⚠️ [SKIPPED] Preview unsimulated (${audit.simulation_status || audit.recommendation}). Full simulation requires paid /v1/scan ($0.010 USDC).`);
           } else {
-            console.log(`✅ [APPROVED] Token verified liquidatable (0% tax, $${audit.liquidity_usd.toLocaleString()} pool). Safe to snipe!`);
+            console.log(`✅ [APPROVED] Token verified liquidatable (${audit.sell_tax_bps / 100}% tax, $${audit.liquidity_usd.toLocaleString()} pool). Safe to snipe!`);
             console.log(`   👉 Deep Report: ${RUGSHIELD_BASE_URL}/?token=${alert.token_address}`);
           }
         } catch (err: any) {

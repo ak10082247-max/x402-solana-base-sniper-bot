@@ -51,8 +51,6 @@ npm run telegram:bot
 
 - **RugShield 402 Terminal**: [https://rugshield-402.onrender.com](https://rugshield-402.onrender.com)
 - **CanaryGuard 402 Terminal**: [https://canaryguard-402.onrender.com](https://canaryguard-402.onrender.com)
-- **StealthGuard 402 Terminal**: [https://stealthguard-402.onrender.com](https://stealthguard-402.onrender.com)
-- **x402 Agent Tollbooth**: [https://x402-agent-tollbooth.onrender.com](https://x402-agent-tollbooth.onrender.com)
 - **Live Graduated Token Alerts Feed**: [https://rugshield-402.onrender.com/v1/feed/live-alerts](https://rugshield-402.onrender.com/v1/feed/live-alerts)
 
 ---
@@ -132,5 +130,4 @@ npm run dev
 ### Pre-Installed Official SDKs
 - `@kurox_real/rugshield-client`
 - `@kurox_real/canaryguard-client`
-- `@kurox_real/stealthguard-client`
 - `@kurox_real/solana-agent-kit-guard`

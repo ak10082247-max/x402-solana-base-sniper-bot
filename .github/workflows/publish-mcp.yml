@@ -42,14 +42,6 @@ jobs:
         run: |
           ./mcp-publisher publish registry/rugshield.json || true
 
-      - name: Publish stealthguard-402 (streamable-http remote)
-        run: |
-          ./mcp-publisher publish registry/stealthguard.json || true
-
-      - name: Publish x402-agent-tollbooth (streamable-http remote)
-        run: |
-          ./mcp-publisher publish registry/tollbooth.json || true
-
       - name: Verify Published Servers
         run: |
           echo "Verifying published servers on registry.modelcontextprotocol.io..."

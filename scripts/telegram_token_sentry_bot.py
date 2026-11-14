@@ -28,7 +28,7 @@ RUGSHIELD_URL = os.getenv("RUGSHIELD_URL", "https://rugshield-402.onrender.com")
 SOLANA_CA_REGEX = re.compile(r"\b([1-9A-HJ-NP-Za-km-z]{32,44})\b")
 EVM_CA_REGEX = re.compile(r"\b(0x[a-fA-F0-9]{40})\b")
 
-def audit_token(address: str, chain: str) -> dict:
+def audit_token(address: str, chain: str) -> dict | None:
     try:
         res = requests.post(
             f"{RUGSHIELD_URL}/v1/scan/preview",
@@ -37,18 +37,11 @@ def audit_token(address: str, chain: str) -> dict:
         )
         if res.status_code == 200:
             return res.json()
+        logging.warning(f"RugShield API returned HTTP {res.status_code}")
     except Exception as e:
         logging.warning(f"Error querying RugShield API: {e}")
-    
-    # Graceful fallback response
-    return {
-        "is_honeypot": False,
-        "buy_tax_bps": 0,
-        "sell_tax_bps": 0,
-        "liquidity_usd": 1840000,
-        "sybil_clusters": 0,
-        "recommendation": "SAFE_TO_SWAP"
-    }
+
+    return None
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -75,14 +68,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(f"Detected token {address} on {chain_label}")
 
     data = audit_token(address, chain)
-    is_honeypot = data.get("is_honeypot", False)
-    buy_tax = f"{data.get('buy_tax_bps', 0) / 100:.1f}%"
-    sell_tax = f"{data.get('sell_tax_bps', 0) / 100:.1f}%"
-    liquidity = f"${data.get('liquidity_usd', 0):,}"
-    clusters = data.get("sybil_clusters", 0)
+    if data is None:
+        await update.message.reply_text(
+            f"⚠️ *RugShield 402 Unavailable*\nToken `{address}` ({chain_label}) could not be verified right now. Do NOT treat this as safe.",
+            parse_mode="Markdown",
+        )
+        return
 
-    verdict_emoji = "🚨" if is_honeypot else "🛡️"
-    status_text = "DANGER: HONEYPOT DETECTED" if is_honeypot else "PASS (Safe & Liquidatable)"
+    is_honeypot = data.get("is_honeypot")
+    buy_tax_bps = data.get("buy_tax_bps")
+    sell_tax_bps = data.get("sell_tax_bps")
+    liquidity_usd = data.get("liquidity_usd")
+    clusters = data.get("sybil_clusters")
+    sim_status = data.get("simulation_status")
+
+    buy_tax = f"{buy_tax_bps / 100:.1f}%" if isinstance(buy_tax_bps, (int, float)) else "N/A (paid /v1/scan required)"
+    sell_tax = f"{sell_tax_bps / 100:.1f}%" if isinstance(sell_tax_bps, (int, float)) else "N/A (paid /v1/scan required)"
+    liquidity = f"${liquidity_usd:,}" if isinstance(liquidity_usd, (int, float)) else "N/A (paid /v1/scan required)"
+    clusters_label = f"{clusters} suspicious rings" if isinstance(clusters, (int, float)) else "N/A (paid /v1/scan required)"
+
+    if is_honeypot is True:
+        verdict_emoji = "🚨"
+        status_text = "DANGER: HONEYPOT DETECTED"
+    elif is_honeypot is False:
+        verdict_emoji = "🛡️"
+        status_text = "PASS (Safe & Liquidatable)"
+    else:
+        verdict_emoji = "⏳"
+        status_text = f"UNSIMULATED PREVIEW ({sim_status or 'paid /v1/scan required'})"
 
     report = (
         f"{verdict_emoji} *RugShield 402 Pre-Trade Sentry*\n"
@@ -91,8 +104,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🌐 *Network:* `{chain_label}`\n"
         f"🚨 *Honeypot Gate:* *{status_text}*\n"
         f"💸 *Taxes:* Buy: `{buy_tax}` | Sell: `{sell_tax}`\n"
-        f"💧 *Pool Depth:* `{liquidity} USD`\n"
-        f"👥 *Dev Clusters:* `{clusters} suspicious rings`\n"
+        f"💧 *Pool Depth:* `{liquidity}`\n"
+        f"👥 *Dev Clusters:* `{clusters_label}`\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"💡 _Teaser preview provided by RugShield 402. Full cryptographic cluster map & bytecode simulation available below._"
     )

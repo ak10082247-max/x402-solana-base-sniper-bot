@@ -47,7 +47,6 @@
     "@kurox_real/canaryguard-client": "^1.0.1",
     "@kurox_real/rugshield-client": "^1.0.0",
     "@kurox_real/solana-agent-kit-guard": "^1.0.0",
-    "@kurox_real/stealthguard-client": "^1.0.0",
     "dotenv": "^16.4.5",
     "viem": "^2.21.0"
   },
