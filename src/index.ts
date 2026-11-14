@@ -1,28 +1,30 @@
 #!/usr/bin/env node
 /**
- * @kurox_real/x402-sniper-bot (v1.0.11)
+ * @kurox_real/x402-sniper-bot (v1.1.0)
  * -------------------------------------
  * Model Context Protocol (MCP) Pre-Trade Security & Alpha Oracle for:
  *   1. Solana Mainnet (Pump.fun graduations, Raydium, Jupiter v6)
  *   2. Base Mainnet (Virtuals, Clanker, Aerodrome SlipStream, Uniswap V3)
  *   3. CanaryGuard Prompt-Injection Firewall & Smart-Money Orderflow
  *
- * Non-custodial x402 billing: set X402_PRIVATE_KEY (Base USDC, 0 ETH gas)
- * for automatic per-request EIP-3009 signing via @x402/fetch, or omit to
- * evaluate free /preview endpoints.
+ * Non-custodial dual-chain x402 billing:
+ *   - Solana Mainnet USDC (PayAI fee-sponsored, 0 SOL gas): set SOLANA_PRIVATE_KEY
+ *   - Base Mainnet USDC (CDP / PayAI gasless EIP-3009): set X402_PRIVATE_KEY
+ *   - Omit keys to evaluate free /preview endpoints.
  */
 import * as readline from "readline";
-import { x402Client, wrapFetchWithPayment } from "@x402/fetch";
-import { ExactEvmScheme } from "@x402/evm/exact/client";
-import { privateKeyToAccount } from "viem/accounts";
+import {
+  createGuardPayingFetch,
+  createGuardPayingFetchAsync,
+  resolvePrivateKey as resolveGuardEvmKey,
+  resolveSolanaPrivateKeyBytes,
+  resolveSolanaRpcUrl,
+} from "@kurox_real/solana-agent-kit-guard";
 
-export const SERVICE_VERSION = "1.0.11";
-const EXPECTED_MERCHANT = "0x80e0ae84679b7f11be171daadd492fbecf628cd6";
-const BASE_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
-const MAX_PER_CALL_MICRO_USDC = 200_000n;
+export const SERVICE_VERSION = "1.1.0";
 
 export const X402_UPGRADE_HINT =
-  "Evaluated via free preview. Set X402_PRIVATE_KEY (or RUGSHIELD_PRIVATE_KEY / CANARYGUARD_PRIVATE_KEY) funded with Base USDC (0 ETH gas required) for live swap simulation & smart-money orderflow ($0.010 USDC/call).";
+  "Evaluated via free preview. Set SOLANA_PRIVATE_KEY (Solana USDC, 0 SOL gas) or X402_PRIVATE_KEY (Base USDC, 0 ETH gas) for live swap simulation & smart-money orderflow ($0.010 USDC/call).";
 
 export const X402_ENDPOINTS = {
   rugshield: process.env.RUGSHIELD_URL || "https://rugshield-402.onrender.com",
@@ -132,54 +134,61 @@ export const MCP_TOOLS = [
 ];
 
 export function resolveX402PrivateKey(explicitKey?: string): `0x${string}` | undefined {
-  const candidates = [
-    explicitKey,
-    process.env.X402_PRIVATE_KEY,
-    process.env.RUGSHIELD_PRIVATE_KEY,
-    process.env.RUGSHIELD_PAYMENT_PRIVATE_KEY,
-    process.env.CANARYGUARD_PRIVATE_KEY,
-    process.env.EVM_PRIVATE_KEY,
-    process.env.BASE_PRIVATE_KEY,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const cleaned = candidate.trim().replace(/^0x/i, "");
-    if (/^[a-fA-F0-9]{64}$/.test(cleaned)) {
-      return `0x${cleaned}`;
-    }
-  }
-  return undefined;
+  return resolveGuardEvmKey({ x402PrivateKey: explicitKey }, [
+    "RUGSHIELD_PRIVATE_KEY",
+    "RUGSHIELD_PAYMENT_PRIVATE_KEY",
+    "CANARYGUARD_PRIVATE_KEY",
+  ]);
 }
 
 export function createSniperPayingFetch(
   privateKey: `0x${string}`,
   baseFetch: typeof fetch = fetch,
 ): typeof fetch {
-  const account = privateKeyToAccount(privateKey);
-  const client = new x402Client();
-  client.register("eip155:8453", new ExactEvmScheme(account));
-  client.onBeforePaymentCreation(async (context) => {
-    const req = context.selectedRequirements;
-    if (req.network !== "eip155:8453") {
-      throw new Error(`Rejected x402 network ${req.network}: Base mainnet required`);
-    }
-    if (req.asset.toLowerCase() !== BASE_USDC) {
-      throw new Error(`Rejected x402 asset ${req.asset}: Base USDC required`);
-    }
-    if (req.payTo.toLowerCase() !== EXPECTED_MERCHANT) {
-      throw new Error(`Rejected x402 payTo ${req.payTo}: unauthorized recipient`);
-    }
-    if (BigInt(req.amount) > MAX_PER_CALL_MICRO_USDC) {
-      throw new Error(`Rejected x402 amount ${req.amount}: exceeds ${MAX_PER_CALL_MICRO_USDC} cap`);
-    }
-  });
-  return wrapFetchWithPayment(baseFetch, client);
+  return createGuardPayingFetch(privateKey, baseFetch);
 }
 
 export interface VerifySnipeOptions {
   paymentSignature?: string;
   privateKey?: string;
+  solanaPrivateKey?: string | Uint8Array | number[];
+  solanaRpcUrl?: string;
   customFetch?: typeof fetch;
+}
+
+async function resolveSniperCaller(
+  opts: VerifySnipeOptions & { extraEvmKeys?: string[]; extraSolanaKeys?: string[]; staticEnvHeaderKey?: string },
+) {
+  const baseFetch = opts.customFetch ?? fetch;
+  const evmPrivateKey = resolveGuardEvmKey({ x402PrivateKey: opts.privateKey }, opts.extraEvmKeys ?? [
+    "RUGSHIELD_PRIVATE_KEY",
+    "RUGSHIELD_PAYMENT_PRIVATE_KEY",
+    "CANARYGUARD_PRIVATE_KEY",
+  ]);
+  const solanaSecretKeyBytes = resolveSolanaPrivateKeyBytes(
+    { solanaPrivateKey: opts.solanaPrivateKey },
+    opts.extraSolanaKeys ?? ["RUGSHIELD_SOLANA_PRIVATE_KEY", "CANARYGUARD_SOLANA_PRIVATE_KEY"],
+  );
+  const solanaRpcUrl = resolveSolanaRpcUrl({ solanaRpcUrl: opts.solanaRpcUrl });
+  const paymentSignature =
+    opts.paymentSignature ?? (opts.staticEnvHeaderKey ? process.env[opts.staticEnvHeaderKey] : undefined);
+
+  const hasAutoPay = Boolean(evmPrivateKey || solanaSecretKeyBytes);
+  const caller = hasAutoPay
+    ? await createGuardPayingFetchAsync({ evmPrivateKey, solanaSecretKeyBytes, solanaRpcUrl }, baseFetch)
+    : undefined;
+
+  return {
+    caller,
+    baseFetch,
+    paymentSignature,
+    hasAutoPay,
+    paymentMode: (hasAutoPay ? "x402_paid" : paymentSignature ? "x402_header" : "free_preview") as
+      | "x402_paid"
+      | "x402_header"
+      | "free_preview",
+    isPaid: Boolean(hasAutoPay || paymentSignature),
+  };
 }
 
 export async function verifyTokenBeforeSnipe(
@@ -191,21 +200,21 @@ export async function verifyTokenBeforeSnipe(
     typeof paymentOrOptions === "string"
       ? { paymentSignature: paymentOrOptions }
       : paymentOrOptions || {};
-  const paymentSignature = opts.paymentSignature ?? process.env.RUGSHIELD_PAYMENT_HEADER;
-  const privateKey = resolveX402PrivateKey(opts.privateKey);
-  const baseFetch = opts.customFetch ?? fetch;
+  const ctx = await resolveSniperCaller({
+    ...opts,
+    staticEnvHeaderKey: "RUGSHIELD_PAYMENT_HEADER",
+  });
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
   };
-  if (paymentSignature && !privateKey) {
-    headers["PAYMENT-SIGNATURE"] = paymentSignature;
+  if (ctx.paymentSignature && !ctx.hasAutoPay) {
+    headers["PAYMENT-SIGNATURE"] = ctx.paymentSignature;
   }
 
-  const isPaid = Boolean(privateKey || paymentSignature);
-  const endpointPath = isPaid ? "/v1/scan" : "/v1/scan/preview";
-  const caller = privateKey ? createSniperPayingFetch(privateKey, baseFetch) : baseFetch;
+  const endpointPath = ctx.isPaid ? "/v1/scan" : "/v1/scan/preview";
+  const caller = ctx.caller ?? ctx.baseFetch;
 
   try {
     const scanUrl = `${X402_ENDPOINTS.rugshield}${endpointPath}`;
@@ -225,7 +234,7 @@ export async function verifyTokenBeforeSnipe(
         sellTaxBps: null,
         smartMoneyNetflow24hUsd: null,
         sybilClustersDetected: null,
-        paymentMode: privateKey ? "x402_paid" : paymentSignature ? "x402_header" : "free_preview",
+        paymentMode: ctx.paymentMode,
         verdict: res.status === 402 ? "PAYMENT_REQUIRED_402" : `SCAN_HTTP_${res.status}`,
       };
     }
@@ -263,8 +272,8 @@ export async function verifyTokenBeforeSnipe(
       sellTaxBps,
       smartMoneyNetflow24hUsd,
       sybilClustersDetected,
-      paymentMode: privateKey ? "x402_paid" : paymentSignature ? "x402_header" : "free_preview",
-      upgradeHint: isPaid ? undefined : X402_UPGRADE_HINT,
+      paymentMode: ctx.paymentMode,
+      upgradeHint: ctx.isPaid ? undefined : X402_UPGRADE_HINT,
       verdict,
     };
   } catch {
@@ -327,13 +336,13 @@ async function callUpstreamJson(
 export async function executeMcpToolCall(
   toolName: string,
   args: Record<string, any> = {},
-  options?: { customFetch?: typeof fetch; privateKey?: string },
+  options?: VerifySnipeOptions,
 ) {
-  const baseFetch = options?.customFetch ?? fetch;
-  const privateKey = resolveX402PrivateKey(options?.privateKey);
+  const ctx = await resolveSniperCaller(options ?? {});
+  const baseFetch = ctx.baseFetch;
+  const payingFetch = ctx.caller;
   const rugHeader = process.env.RUGSHIELD_PAYMENT_HEADER;
   const canaryHeader = process.env.CANARYGUARD_PAYMENT_HEADER;
-  const payingFetch = privateKey ? createSniperPayingFetch(privateKey, baseFetch) : undefined;
 
   let upstream: {
     ok: boolean;
@@ -427,7 +436,7 @@ export async function executeMcpToolCall(
         payment_required_header: upstream.paymentRequiredHeader || null,
         setup_hint:
           upstream.status === 402
-            ? "Set X402_PRIVATE_KEY (Base mainnet wallet funded with USDC; 0 ETH gas required via EIP-3009) so @kurox_real/x402-sniper-bot pays this x402 call automatically."
+            ? "Set SOLANA_PRIVATE_KEY (Solana USDC via PayAI, 0 SOL gas) or X402_PRIVATE_KEY (Base USDC via EIP-3009, 0 ETH gas) so @kurox_real/x402-sniper-bot pays this x402 call automatically."
             : undefined,
       },
     };
@@ -540,20 +549,18 @@ async function handleJsonRpc(line: string) {
 
 export async function executeTerminalScan(tokenAddress: string) {
   const chain = tokenAddress.startsWith("0x") ? "base" : "solana";
-  const privateKey = resolveX402PrivateKey();
-  const rugHeader = process.env.RUGSHIELD_PAYMENT_HEADER;
-  const isPaid = Boolean(privateKey || rugHeader);
-  const caller = privateKey ? createSniperPayingFetch(privateKey, fetch) : fetch;
-  const endpoint = `${X402_ENDPOINTS.rugshield}${isPaid ? "/v1/scan" : "/v1/scan/preview"}`;
+  const ctx = await resolveSniperCaller({ staticEnvHeaderKey: "RUGSHIELD_PAYMENT_HEADER" });
+  const caller = ctx.caller ?? ctx.baseFetch;
+  const endpoint = `${X402_ENDPOINTS.rugshield}${ctx.isPaid ? "/v1/scan" : "/v1/scan/preview"}`;
   const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "application/json" };
-  if (rugHeader && !privateKey) headers["PAYMENT-SIGNATURE"] = rugHeader;
+  if (ctx.paymentSignature && !ctx.hasAutoPay) headers["PAYMENT-SIGNATURE"] = ctx.paymentSignature;
 
   console.log(`\n\x1b[36m==================================================================\x1b[0m`);
   console.log(`\x1b[1m🛡️  RUGSHIELD 402 — PRE-TRADE TOKEN SIMULATION & AUDIT\x1b[0m`);
   console.log(`\x1b[36m==================================================================\x1b[0m`);
   console.log(`🔍 Target Token : \x1b[33m${tokenAddress}\x1b[0m`);
   console.log(`🌐 Ecosystem    : \x1b[35m${chain.toUpperCase()} MAINNET\x1b[0m`);
-  console.log(`💳 Billing Mode : ${privateKey ? "\x1b[32mx402 Auto-Pay (/v1/scan)\x1b[0m" : rugHeader ? "\x1b[32mStatic PAYMENT-SIGNATURE (/v1/scan)\x1b[0m" : "\x1b[33mFree Preview (/v1/scan/preview)\x1b[0m"}`);
+  console.log(`💳 Billing Mode : ${ctx.hasAutoPay ? "\x1b[32mx402 Auto-Pay (/v1/scan)\x1b[0m" : ctx.paymentSignature ? "\x1b[32mStatic PAYMENT-SIGNATURE (/v1/scan)\x1b[0m" : "\x1b[33mFree Preview (/v1/scan/preview)\x1b[0m"}`);
   console.log(`⏳ Simulating pre-trade state-override swap...`);
 
   try {
@@ -589,8 +596,8 @@ export async function executeTerminalScan(tokenAddress: string) {
       console.log(`💧 Verified Pool   : \x1b[36m${liquidity}\x1b[0m`);
       console.log(`👥 Dev Clusters    : \x1b[33m${clusters}\x1b[0m`);
       console.log(`🏆 Final Verdict   : ${verdict}`);
-      if (!isPaid) {
-        console.log(`💡 Paid Upgrade    : \x1b[33mSet X402_PRIVATE_KEY (Base USDC, 0 ETH gas) for full buy/sell swap simulation\x1b[0m`);
+      if (!ctx.isPaid) {
+        console.log(`💡 Paid Upgrade    : \x1b[33mSet SOLANA_PRIVATE_KEY (Solana USDC, 0 SOL gas) or X402_PRIVATE_KEY (Base USDC, 0 ETH gas) for full paid simulation\x1b[0m`);
       }
       console.log(`──────────────────────────────────────────────────────────────────`);
       console.log(`📊 Live Web Terminal : \x1b[34mhttps://rugshield-402.onrender.com/?token=${tokenAddress}\x1b[0m`);
@@ -619,8 +626,9 @@ Pre-Trade Security & Alpha Oracle for Solana & Base Mainnet
   npx @kurox_real/x402-sniper-bot --demo                 Run live graduated token alert stream
   npx @kurox_real/x402-sniper-bot                        Start MCP stdio JSON-RPC server (Claude, Cursor)
 
-\x1b[33mPaid x402 Auto-Signing (0 ETH gas needed):\x1b[0m
-  export X402_PRIVATE_KEY=0x...   # Base USDC wallet auto-signs $0.010/call via @x402/fetch
+\x1b[33mPaid x402 Auto-Signing (Dual-Chain Gasless):\x1b[0m
+  export SOLANA_PRIVATE_KEY=<base58> # Solana USDC wallet auto-signs via PayAI (@x402/svm, 0 SOL gas)
+  export X402_PRIVATE_KEY=0x...      # Base USDC wallet auto-signs via EIP-3009 (@x402/evm, 0 ETH gas)
 `);
     process.exit(0);
   }
@@ -658,7 +666,7 @@ Pre-Trade Security & Alpha Oracle for Solana & Base Mainnet
 
   if (process.stdin.isTTY && args.length === 0) {
     process.stderr.write(`\x1b[36m🛡️  @kurox_real/x402-sniper-bot (v${SERVICE_VERSION}) — Running in MCP JSON-RPC Server Mode\x1b[0m\n`);
-    process.stderr.write(`💡 Tip: Run 'npx @kurox_real/x402-sniper-bot scan <TOKEN>' or set X402_PRIVATE_KEY for full paid simulation.\n`);
+    process.stderr.write(`💡 Tip: Run 'npx @kurox_real/x402-sniper-bot scan <TOKEN>' or set SOLANA_PRIVATE_KEY / X402_PRIVATE_KEY for full paid simulation.\n`);
     process.stderr.write(`Waiting for JSON-RPC 2.0 messages on stdin...\n`);
   }
 }

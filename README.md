@@ -1,8 +1,8 @@
-# ⚡ x402 Security Oracle & DEX Alpha Sentinel for Solana, Base & Polymarket
+# ⚡ x402 Security Oracle & DEX Alpha Sentinel for Solana & Base
 
-**Read-only pre-trade honeypot simulation, mempool front-running risk detection, and smart-money DEX oracle** for **Solana Mainnet** (Pump.fun graduations, Raydium, Jupiter v6), **Base Mainnet** (Virtuals, Clanker, Aerodrome, Uniswap V3), and **Polymarket CLOB** whale divergence.
+**Read-only pre-trade honeypot simulation, mempool front-running risk detection, and smart-money DEX oracle** for **Solana Mainnet** (Pump.fun graduations, Raydium, Jupiter v6) and **Base Mainnet** (Virtuals, Clanker, Aerodrome, Uniswap V3).
 
-> **Security & Zero-Custody Guarantee**: This MCP server is strictly a **read-only verification oracle and intelligence client**. It requires **zero private keys, zero wallet seed phrases, and holds zero custody of user funds**. Pre-trade simulation runs purely through read-only RPC calldata simulation and cryptographic attestation via x402 v2 micropayments.
+> **Security & Zero-Custody Guarantee**: This MCP server is strictly a **read-only verification oracle and intelligence client**. Free preview mode requires **zero private keys**. To upgrade automatically to full paid simulation/orderflow (`$0.010 USDC/call`), set `SOLANA_PRIVATE_KEY` (Solana USDC via PayAI, 0 SOL gas) or `X402_PRIVATE_KEY` (Base USDC via CDP/PayAI, 0 ETH gas).
 
 Pre-configured with the **Kurox 402 Security & Smart-Money Fleet** so autonomous agents (`Cursor`, `Claude Code`, `Solana Agent Kit`, `Coinbase AgentKit`, `ElizaOS`) never buy a honeypot, sybil dev-cluster rug, or prompt-injected token metadata trap.
 
